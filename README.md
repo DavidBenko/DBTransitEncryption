@@ -20,6 +20,18 @@ Transport Layer Security for securing data payloads in Objective-C. An easy way 
 - Add `ObjectiveTLS` folder to your project
 - Import header (`#import "ObjectiveTLS.h"`)
 
+### Generate X.509 RSA Key Pair
+- Run the following commands to generate a personal key pair for testing. 
+- The files you care about are `public_key.der` and `private_key.p12`
+
+```shell
+openssl req -x509 -out public_key.der -outform der -new -newkey rsa:1024 -keyout private_key.pem -days 3650
+openssl x509 -inform der -outform pem -in public_key.der -out public_key.pem
+openssl pkcs12 -export -in public_key.pem -inkey private_key.pem -out private_key.p12
+```
+
+
+
 Encryption
 ---------
 
