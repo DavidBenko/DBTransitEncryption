@@ -192,10 +192,11 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 
 #pragma mark - AES Encryption
 - (NSData *)aesEncryptData:(NSData *)data key:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
-    NSAssert(iv, @"IV must not be NULL");
     NSAssert(key, @"key must not be NULL");
     
-    *iv = [self randomDataOfLength:kAlgorithmIVSize];
+    if (iv != NULL) {
+        *iv = [self randomDataOfLength:kAlgorithmIVSize];
+    }
     *key = [self randomDataOfLength:kAlgorithmKeySize];
     
     size_t outLength;
@@ -207,7 +208,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
                      kCCOptionPKCS7Padding, // options
                      (*key).bytes, // key
                      (*key).length, // keylength
-                     (*iv).bytes,// iv
+                     (iv != NULL) ? (*iv).bytes : NULL,// iv
                      data.bytes, // dataIn
                      data.length, // dataInLength,
                      cipherData.mutableBytes, // dataOut
@@ -230,10 +231,8 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 }
 
 #pragma mark - AES Decryption
-- (NSData *)aesDecryptData:(NSData *)data
-                       key:(NSData *)key
-                       iv:(NSData *)iv
-                    error:(NSError **)error {
+- (NSData *)aesDecryptData:(NSData *)data key:(NSData *)key iv:(NSData *)iv error:(NSError **)error {
+    NSAssert(key, @"key must not be NULL");
     
     size_t outLength;
     NSMutableData *decryptedData = [NSMutableData dataWithLength:data.length];
@@ -243,7 +242,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
                      kCCOptionPKCS7Padding, // options
                      key.bytes, // key
                      key.length, // keylength
-                     iv.bytes,// iv
+                     (iv != NULL) ? iv.bytes : NULL,// iv
                      data.bytes, // dataIn
                      data.length, // dataInLength,
                      decryptedData.mutableBytes, // dataOut
