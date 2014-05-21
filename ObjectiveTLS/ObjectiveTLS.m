@@ -292,13 +292,8 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 }
 
 - (NSString *)aesStringDecryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
-    NSData *secret = [self RSADecryptData:key];
-    if (secret) {
-        NSData *decryptedData = [self aesDecryptData:data key:secret iv:iv error:error];
-        secret = nil;
-        return [[NSString alloc]initWithData:decryptedData encoding:kStringEncoding];
-    }
-    return nil;
+	NSData *decryptedData = [self aesDecryptData:data rsaEncryptedKey:key iv:iv error:error];
+	return [[NSString alloc]initWithData:decryptedData encoding:kStringEncoding];
 }
 
 #pragma mark - Memory Management
