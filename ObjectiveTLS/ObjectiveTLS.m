@@ -24,7 +24,7 @@
 @end
 
 @implementation ObjectiveTLS
-
+static const NSUInteger kRSAKeySize = 1024; //Bit
 static const CCAlgorithm kAlgorithm = kCCAlgorithmAES128;
 static const NSUInteger kAlgorithmKeySize = kCCKeySizeAES128;
 static const NSUInteger kAlgorithmBlockSize = kCCBlockSizeAES128;
@@ -129,7 +129,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     [content getBytes:plain
                length:plainLen];
     
-    size_t cipherLen = 128; // currently RSA key length is set to 128 bytes
+    size_t cipherLen = (kRSAKeySize / 8); // convert to byte
     void *cipher = malloc(cipherLen);
     
     OSStatus returnCode = SecKeyEncrypt(publicKey, kSecPaddingPKCS1, plain,
