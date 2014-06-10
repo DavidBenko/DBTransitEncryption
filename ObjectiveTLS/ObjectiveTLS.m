@@ -38,7 +38,11 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 - (ObjectiveTLS *)initWithX509PublicKeyData:(NSData *)base64KeyData {
     self = [super init];
     if (self) {
-        [self setPublicKey:base64KeyData];
+        
+        // If public key read fails, return nil
+        if(![self setPublicKey:base64KeyData]){
+            return nil;
+        }
     }
     
     return self;
