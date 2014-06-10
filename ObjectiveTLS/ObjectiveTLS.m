@@ -37,38 +37,8 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 
 - (ObjectiveTLS *)initWithX509PublicKeyData:(NSData *)base64KeyData {
     self = [super init];
-    
     if (self) {
-        if (base64KeyData == nil) {
-            return nil;
-        }
-        
-        certificate = SecCertificateCreateWithData(kCFAllocatorDefault, ( __bridge CFDataRef) base64KeyData);
-        if (certificate == nil) {
-            NSLog(@"Can not read certificate from data");
-            return nil;
-        }
-        
-        policy = SecPolicyCreateBasicX509();
-        OSStatus returnCode = SecTrustCreateWithCertificates(certificate, policy, &trust);
-        if (returnCode != 0) {
-            NSLog(@"SecTrustCreateWithCertificates fail. Error Code: %d", (int)returnCode);
-            return nil;
-        }
-        
-        SecTrustResultType trustResultType;
-        returnCode = SecTrustEvaluate(trust, &trustResultType);
-        if (returnCode != 0) {
-            return nil;
-        }
-        
-        publicKey = SecTrustCopyPublicKey(trust);
-        if (publicKey == nil) {
-            NSLog(@"SecTrustCopyPublicKey fail");
-            return nil;
-        }
-        
-        maxPlainLen = SecKeyGetBlockSize(publicKey) - 12;
+        [self setPublicKey:base64KeyData];
     }
     
     return self;
@@ -82,6 +52,42 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     
     NSData *publicKeyFileContent = [NSData dataWithContentsOfFile:publicKeyPath];
     return [self initWithX509PublicKeyData:publicKeyFileContent];
+}
+
+#pragma mark - Public Key (.der)
+- (BOOL)setPublicKey:(NSData *)publicKeyContents{
+    if (publicKeyContents == nil) {
+        return false;
+    }
+    
+    certificate = SecCertificateCreateWithData(kCFAllocatorDefault, ( __bridge CFDataRef) publicKeyContents);
+    if (certificate == nil) {
+        NSLog(@"Can not read certificate from data");
+        return false;
+    }
+    
+    policy = SecPolicyCreateBasicX509();
+    OSStatus returnCode = SecTrustCreateWithCertificates(certificate, policy, &trust);
+    if (returnCode != 0) {
+        NSLog(@"SecTrustCreateWithCertificates fail. Error Code: %d", (int)returnCode);
+        return false;
+    }
+    
+    SecTrustResultType trustResultType;
+    returnCode = SecTrustEvaluate(trust, &trustResultType);
+    if (returnCode != 0) {
+        return false;
+    }
+    
+    publicKey = SecTrustCopyPublicKey(trust);
+    if (publicKey == nil) {
+        NSLog(@"SecTrustCopyPublicKey fail");
+        return false;
+    }
+    
+    maxPlainLen = SecKeyGetBlockSize(publicKey) - 12;
+    
+    return true;
 }
 
 #pragma mark - Private Key (.p12)
@@ -100,7 +106,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     
     if (returnCode != 0) {
         NSLog(@"SecPKCS12Import fail");
-        return FALSE;
+        return false;
     }
     
     NSDictionary* item = (NSDictionary*) CFArrayGetValueAtIndex(importedItems, 0);
@@ -108,10 +114,10 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     SecIdentityCopyPrivateKey(identity, &privateKey);
     if (privateKey == nil) {
         NSLog(@"SecIdentityCopyPrivateKey fail");
-        return FALSE;
+        return false;
     }
     
-    return TRUE;
+    return true;
 }
 
 #pragma mark - RSA Encryption
