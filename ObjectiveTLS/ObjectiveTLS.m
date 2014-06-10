@@ -11,7 +11,6 @@
 //
 
 #import "ObjectiveTLS.h"
-#import <CommonCrypto/CommonCryptor.h>
 
 @interface ObjectiveTLS (){
     SecKeyRef publicKey;
@@ -24,14 +23,8 @@
 @end
 
 @implementation ObjectiveTLS
-static const NSUInteger kRSAKeySize = 1024; //Bit
-static const CCAlgorithm kAlgorithm = kCCAlgorithmAES128;
-static const NSUInteger kAlgorithmKeySize = kCCKeySizeAES128;
-static const NSUInteger kAlgorithmBlockSize = kCCBlockSizeAES128;
-static const NSUInteger kAlgorithmIVSize = kCCBlockSizeAES128;
-static const NSStringEncoding kStringEncoding = NSUTF8StringEncoding;
-static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls";
 
+static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls";
 
 #pragma mark - Init
 
@@ -43,6 +36,17 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
         if(![self setPublicKey:base64KeyData]){
             return nil;
         }
+        
+        // Default values (RSA 128, AES 128, UTF8 encoding)
+        _rsaKeySize = 1024;
+        _rsaPadding = kSecPaddingPKCS1;
+        
+        _encryptorAlgorithm = kCCAlgorithmAES128;
+        _encryptorAlgorithmOptions = kCCOptionPKCS7Padding;
+        _encryptorAlgorithmKeySize = kCCKeySizeAES128;
+        _encryptorAlgorithmBlockSize = kCCBlockSizeAES128;
+        _encryptorAlgorithmIVSize = kCCBlockSizeAES128;
+        _encryptorStringEncoding = NSUTF8StringEncoding;
     }
     
     return self;
@@ -139,10 +143,10 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     [content getBytes:plain
                length:plainLen];
     
-    size_t cipherLen = (kRSAKeySize / 8); // convert to byte
+    size_t cipherLen = (self.rsaKeySize / 8); // convert to byte
     void *cipher = malloc(cipherLen);
     
-    OSStatus returnCode = SecKeyEncrypt(publicKey, kSecPaddingPKCS1, plain,
+    OSStatus returnCode = SecKeyEncrypt(publicKey, self.rsaPadding, plain,
                                         plainLen, cipher, &cipherLen);
     
     NSData *result = nil;
@@ -171,7 +175,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     size_t plainLen = SecKeyGetBlockSize(privateKey) - 12;
     void *plain = malloc(plainLen);
     
-    OSStatus returnCode = SecKeyDecrypt(privateKey, kSecPaddingPKCS1, cipher,
+    OSStatus returnCode = SecKeyDecrypt(privateKey, self.rsaPadding, cipher,
                                         cipherLen, plain, &plainLen);
     
     NSData *result = nil;
@@ -205,17 +209,17 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     NSAssert(key, @"key must not be NULL");
     
     if (iv != NULL) {
-        *iv = [self randomDataOfLength:kAlgorithmIVSize];
+        *iv = [self randomDataOfLength:self.encryptorAlgorithmIVSize];
     }
-    *key = [self randomDataOfLength:kAlgorithmKeySize];
+    *key = [self randomDataOfLength:self.encryptorAlgorithmKeySize];
     
     size_t outLength;
-    NSMutableData *cipherData = [NSMutableData dataWithLength:data.length + kAlgorithmBlockSize];
+    NSMutableData *cipherData = [NSMutableData dataWithLength:data.length + self.encryptorAlgorithmBlockSize];
     
     CCCryptorStatus
     result = CCCrypt(kCCEncrypt, // operation
-                     kAlgorithm, // Algorithm
-                     kCCOptionPKCS7Padding, // options
+                     self.encryptorAlgorithm, // Algorithm
+                     self.encryptorAlgorithmOptions, // options
                      (*key).bytes, // key
                      (*key).length, // keylength
                      (iv != NULL) ? (*iv).bytes : NULL,// iv
@@ -248,8 +252,8 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     NSMutableData *decryptedData = [NSMutableData dataWithLength:data.length];
     CCCryptorStatus
     result = CCCrypt(kCCDecrypt, // operation
-                     kAlgorithm, // Algorithm
-                     kCCOptionPKCS7Padding, // options
+                     self.encryptorAlgorithm, // Algorithm
+                     self.encryptorAlgorithmOptions, // options
                      key.bytes, // key
                      key.length, // keylength
                      (iv != NULL) ? iv.bytes : NULL,// iv
@@ -287,7 +291,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 }
 
 - (NSData *)aesEncryptString:(NSString *)string rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
-    NSData *dataToEncrypt = [string dataUsingEncoding:kStringEncoding];
+    NSData *dataToEncrypt = [string dataUsingEncoding:self.encryptorStringEncoding];
     return [self aesEncryptData:dataToEncrypt rsaEncryptedKey:key iv:iv error:error];
 }
 
@@ -303,7 +307,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 
 - (NSString *)aesStringDecryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
 	NSData *decryptedData = [self aesDecryptData:data rsaEncryptedKey:key iv:iv error:error];
-	return [[NSString alloc]initWithData:decryptedData encoding:kStringEncoding];
+	return [[NSString alloc]initWithData:decryptedData encoding:self.encryptorStringEncoding];
 }
 
 #pragma mark - Memory Management

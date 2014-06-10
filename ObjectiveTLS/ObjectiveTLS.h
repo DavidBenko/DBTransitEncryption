@@ -11,8 +11,18 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CommonCrypto/CommonCryptor.h>
 
 @interface ObjectiveTLS : NSObject
+
+@property (nonatomic, assign) NSUInteger rsaKeySize;                        // RSA key size in bits
+@property (nonatomic, assign) SecPadding rsaPadding;                        // RSA padding
+@property (nonatomic, assign) CCAlgorithm encryptorAlgorithm;               // Data payload encryption algorithm
+@property (nonatomic, assign) CCOptions encryptorAlgorithmOptions;          // Options (padding) for data payload encryptor
+@property (nonatomic, assign) NSUInteger encryptorAlgorithmKeySize;         // Size of generated symmetric key
+@property (nonatomic, assign) NSUInteger encryptorAlgorithmBlockSize;       // Block size of data payload encryption algorithm
+@property (nonatomic, assign) NSUInteger encryptorAlgorithmIVSize;          // Size of generated initialization vector
+@property (nonatomic, assign) NSStringEncoding encryptorStringEncoding;     // String encoding for encrypted/decrypted strings
 
 /*
  *
