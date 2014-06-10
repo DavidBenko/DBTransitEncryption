@@ -6,7 +6,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = "ObjectiveTLS"
-  s.version          = File.read('VERSION')
+  s.version          = "0.1.0"
   s.summary          = "Encryption for data in transit; ObjectiveTLS will secure data for transit similar to the handshake protocol of TLS."
   s.description      = <<-DESC
 Transport Layer Security for securing data payloads in Objective-C. An easy way to secure data by providing a symmetric key for that transaction. Keys are generated on the fly and every message will have a new key.
