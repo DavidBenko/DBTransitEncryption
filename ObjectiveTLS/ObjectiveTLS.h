@@ -13,6 +13,9 @@
 #import <Foundation/Foundation.h>
 #import <CommonCrypto/CommonCryptor.h>
 
+typedef void (^IVMixerBlock) (NSData **data,NSData **key, NSData *iv);
+typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
+
 @interface ObjectiveTLS : NSObject
 
 @property (nonatomic, assign) NSUInteger rsaKeySize;                        // RSA key size in bits
@@ -23,6 +26,8 @@
 @property (nonatomic, assign) NSUInteger encryptorAlgorithmBlockSize;       // Block size of data payload encryption algorithm
 @property (nonatomic, assign) NSUInteger encryptorAlgorithmIVSize;          // Size of generated initialization vector
 @property (nonatomic, assign) NSStringEncoding encryptorStringEncoding;     // String encoding for encrypted/decrypted strings
+@property (readwrite, copy) IVMixerBlock ivMixer;                           // Block to mix IV with key or data
+@property (readwrite, copy) IVSeparatorBlock ivSeparator;                   // Block to separate IV from key or data
 
 /*
  *

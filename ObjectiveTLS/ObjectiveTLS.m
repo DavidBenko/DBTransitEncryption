@@ -47,6 +47,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
         _encryptorAlgorithmBlockSize = kCCBlockSizeAES128;
         _encryptorAlgorithmIVSize = kCCBlockSizeAES128;
         _encryptorStringEncoding = NSUTF8StringEncoding;
+        
     }
     
     return self;
@@ -241,12 +242,20 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
         return nil;
     }
     
+    if (self.ivMixer) {
+        self.ivMixer(&cipherData,key,*iv);
+    }
+    
     return cipherData;
 }
 
 #pragma mark - AES Decryption
 - (NSData *)aesDecryptData:(NSData *)data key:(NSData *)key iv:(NSData *)iv error:(NSError **)error {
     NSAssert(key, @"key must not be NULL");
+    
+    if(self.ivSeparator){
+        iv = self.ivSeparator(&data,&key);
+    }
     
     size_t outLength;
     NSMutableData *decryptedData = [NSMutableData dataWithLength:data.length];
