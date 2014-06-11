@@ -63,7 +63,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     return [self initWithX509PublicKeyData:publicKeyFileContent];
 }
 
-#pragma mark - Public Key (.der)
+#pragma mark - X.509 RSA Public Key (.der)
 - (BOOL)setPublicKey:(NSData *)publicKeyContents{
     if (publicKeyContents == nil) {
         return false;
@@ -99,7 +99,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     return true;
 }
 
-#pragma mark - Private Key (.p12)
+#pragma mark - PKCS#12 RSA Private Key (.p12)
 -(BOOL)setPrivateKey:(NSString *)privateKeyPath withPassphrase:(NSString *)password{
     NSData *pkcs12key = [NSData dataWithContentsOfFile:privateKeyPath];
     NSDictionary* options = NULL;
@@ -218,17 +218,17 @@ NSData* randomDataOfLength(size_t length){
     NSMutableData *cipherData = [NSMutableData dataWithLength:data.length + self.encryptorAlgorithmBlockSize];
     
     CCCryptorStatus
-    result = CCCrypt(kCCEncrypt, // operation
-                     self.encryptorAlgorithm, // Algorithm
-                     self.encryptorAlgorithmOptions, // options
-                     (*key).bytes, // key
-                     (*key).length, // keylength
-                     (iv != NULL) ? (*iv).bytes : NULL,// iv
-                     data.bytes, // dataIn
-                     data.length, // dataInLength,
-                     cipherData.mutableBytes, // dataOut
-                     cipherData.length, // dataOutAvailable
-                     &outLength); // dataOutMoved
+    result = CCCrypt(kCCEncrypt,                            // operation
+                     self.encryptorAlgorithm,               // Algorithm
+                     self.encryptorAlgorithmOptions,        // options
+                     (*key).bytes,                          // key
+                     (*key).length,                         // keylength
+                     (iv != NULL) ? (*iv).bytes : NULL,     // iv
+                     data.bytes,                            // dataIn
+                     data.length,                           // dataInLength,
+                     cipherData.mutableBytes,               // dataOut
+                     cipherData.length,                     // dataOutAvailable
+                     &outLength);                           // dataOutMoved
     
     if (result == kCCSuccess) {
         cipherData.length = outLength;
@@ -260,17 +260,17 @@ NSData* randomDataOfLength(size_t length){
     size_t outLength;
     NSMutableData *decryptedData = [NSMutableData dataWithLength:data.length];
     CCCryptorStatus
-    result = CCCrypt(kCCDecrypt, // operation
-                     self.encryptorAlgorithm, // Algorithm
-                     self.encryptorAlgorithmOptions, // options
-                     key.bytes, // key
-                     key.length, // keylength
-                     (iv != NULL) ? iv.bytes : NULL,// iv
-                     data.bytes, // dataIn
-                     data.length, // dataInLength,
-                     decryptedData.mutableBytes, // dataOut
-                     decryptedData.length, // dataOutAvailable
-                     &outLength); // dataOutMoved
+    result = CCCrypt(kCCDecrypt,                        // operation
+                     self.encryptorAlgorithm,           // Algorithm
+                     self.encryptorAlgorithmOptions,    // options
+                     key.bytes,                         // key
+                     key.length,                        // keylength
+                     (iv != NULL) ? iv.bytes : NULL,    // iv
+                     data.bytes,                        // dataIn
+                     data.length,                       // dataInLength,
+                     decryptedData.mutableBytes,        // dataOut
+                     decryptedData.length,              // dataOutAvailable
+                     &outLength);                       // dataOutMoved
     
     if (result == kCCSuccess) {
         [decryptedData setLength:outLength];
@@ -290,7 +290,7 @@ NSData* randomDataOfLength(size_t length){
     return decryptedData;
 }
 
-#pragma mark - Public TLS Methods
+#pragma mark - Public Encryption Methods
 - (NSData *)encryptData:(NSData *)data rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
     NSData *secret = nil;
     NSData *encryptedData = [self encryptData:data key:&secret iv:iv error:error];
@@ -318,6 +318,7 @@ NSData* randomDataOfLength(size_t length){
     return [self encryptData:dataToEncrypt withIVMixer:ivMixer rsaEncryptedKey:key error:error];
 }
 
+#pragma mark - Public Decryption Methods
 - (NSData *)decryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
     NSData *secret = [self RSADecryptData:key];
     if (secret) {
