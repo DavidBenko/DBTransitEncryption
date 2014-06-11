@@ -16,6 +16,12 @@ Transport Layer Security for securing data payloads in Objective-C. An easy way 
 - Returns AES-encrypted payload and RSA-encrypted symmetric key 
 
 ### Installation
+
+##### Via CocoaPods
+- Add `pod 'ObjectiveTLS'` to your podfile
+- Run `pod install`
+ 
+##### Manual Installation
 - Link project against `Security.framework`
 - Add `ObjectiveTLS` folder to your project
 - Import header (`#import "ObjectiveTLS.h"`)
@@ -114,6 +120,59 @@ Decryption
                                                    iv:iv
                                                 error:&err];
 ```
+
+Public Properties
+---------
+**ObjectiveTLS** has a few public properties which allow you to modify the encryption algorithms to suit your project's needs.
+
+```objc
+@property (nonatomic, assign) NSUInteger rsaKeySize;                        // RSA key size in bits
+@property (nonatomic, assign) SecPadding rsaPadding;                        // RSA padding
+@property (nonatomic, assign) CCAlgorithm encryptorAlgorithm;               // Data payload encryption algorithm
+@property (nonatomic, assign) CCOptions encryptorAlgorithmOptions;          // Options (padding) for data payload encryptor
+@property (nonatomic, assign) NSUInteger encryptorAlgorithmKeySize;         // Size of generated symmetric key
+@property (nonatomic, assign) NSUInteger encryptorAlgorithmBlockSize;       // Block size of data payload encryption algorithm
+@property (nonatomic, assign) NSUInteger encryptorAlgorithmIVSize;          // Size of generated initialization vector
+@property (nonatomic, assign) NSStringEncoding encryptorStringEncoding;     // String encoding for encrypted/decrypted strings
+@property (readwrite, copy) IVMixerBlock ivMixer;                           // Block to mix IV with key or data
+@property (readwrite, copy) IVSeparatorBlock ivSeparator;                   // Block to separate IV from key or data
+```
+
+
+IV Mixer Blocks
+---------
+**ObjectiveTLS** allows you to define custom blocks to mix and separate the initialization vector with the key and/or the encrypted data. 
+
+The `ivMixer` gives access to the data, key, and iv immediately after the data is encrypted, but before the key is encrypted. This allows you to mix the iv with key before it is RSA encrypted, to further secure the iv.
+
+The `ivSeparator` is the opposite of the `ivMixer`. The `ivSeparator` should be implemented in a way which undoes the mixing algorithm and returns the iv. **The `ivSeparator` is only needed for decryption.**
+
+### IV Mixing Example
+```objc
+
+    ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKeyData:pubkeyb64data];
+    
+    // Prepends the iv to the key before the key is encrypted
+    
+    [otls setIvMixer:^(NSData **data,NSData **key, NSData *iv){
+        NSMutableData *mutableKey = [iv mutableCopy];
+        [mutableKey appendBytes:[*key bytes] length:[*key length]];
+        *key = mutableKey;
+    }];
+    
+    // Extracts the iv from the key before decryption
+    
+    [otls setIvSeparator:^NSData *(NSData **data, NSData **key){
+        NSInteger ivSize = 16;
+        NSMutableData *mutableKey = [*key mutableCopy];
+        NSRange range = NSMakeRange(0, ivSize);
+        NSData *iv = [mutableKey subdataWithRange:range];
+        [mutableKey replaceBytesInRange:range withBytes:NULL length:0];
+        *key = mutableKey;
+        return iv;
+    }];
+```
+
 
 License
 ---------------
