@@ -205,8 +205,8 @@ NSData* randomDataOfLength(size_t length){
     return result;
 }
 
-#pragma mark - AES Encryption
-- (NSData *)aesEncryptData:(NSData *)data key:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
+#pragma mark - Symmetric Encryption
+- (NSData *)encryptData:(NSData *)data key:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
     NSAssert(key, @"key must not be NULL");
     
     if (iv != NULL) {
@@ -249,8 +249,8 @@ NSData* randomDataOfLength(size_t length){
     return cipherData;
 }
 
-#pragma mark - AES Decryption
-- (NSData *)aesDecryptData:(NSData *)data key:(NSData *)key iv:(NSData *)iv error:(NSError **)error {
+#pragma mark - Symmetric Decryption
+- (NSData *)decryptData:(NSData *)data key:(NSData *)key iv:(NSData *)iv error:(NSError **)error {
     NSAssert(key, @"key must not be NULL");
     
     if(self.ivSeparator){
@@ -293,7 +293,7 @@ NSData* randomDataOfLength(size_t length){
 #pragma mark - Public TLS Methods
 - (NSData *)encryptData:(NSData *)data rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
     NSData *secret = nil;
-    NSData *encryptedData = [self aesEncryptData:data key:&secret iv:iv error:error];
+    NSData *encryptedData = [self encryptData:data key:&secret iv:iv error:error];
     *key = [self RSAEncryptData:secret];
     secret = nil;
     return encryptedData;
@@ -321,7 +321,7 @@ NSData* randomDataOfLength(size_t length){
 - (NSData *)decryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
     NSData *secret = [self RSADecryptData:key];
     if (secret) {
-        NSData *decryptedData = [self aesDecryptData:data key:secret iv:iv error:error];
+        NSData *decryptedData = [self decryptData:data key:secret iv:iv error:error];
         secret = nil;
         return decryptedData;
     }
