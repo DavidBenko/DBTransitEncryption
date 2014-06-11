@@ -1,5 +1,5 @@
 //
-//  ObjectiveTLS.h
+//  DBTransitEncryption.h
 //  DBTransitEncryption
 //
 //  Created by David Benko on 5/9/14.
@@ -16,7 +16,7 @@
 typedef void (^IVMixerBlock) (NSData **data,NSData **key, NSData *iv);
 typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
 
-@interface ObjectiveTLS : NSObject
+@interface DBTransitEncryption : NSObject
 
 @property (nonatomic, assign) NSUInteger rsaKeySize;                        // RSA key size in bits
 @property (nonatomic, assign) SecPadding rsaPadding;                        // RSA padding
@@ -37,7 +37,7 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
  * @param base64KeyData The contents of the public key
  * @return new ObjectiveTLS instance
  */
-- (ObjectiveTLS *)initWithX509PublicKeyData:(NSData *)base64KeyData;
+- (DBTransitEncryption *)initWithX509PublicKeyData:(NSData *)base64KeyData;
 
 /**
  * Initializes a new ObjectiveTLS object with the contents of a X.509 RSA public key at a given path
@@ -45,7 +45,7 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
  * @param publicKeyPath The file path of the public key
  * @return new ObjectiveTLS instance
  */
-- (ObjectiveTLS *)initWithX509PublicKey:(NSString *)publicKeyPath;
+- (DBTransitEncryption *)initWithX509PublicKey:(NSString *)publicKeyPath;
 
 #pragma mark - PKCS#12 RSA Private Key (.p12)
 
