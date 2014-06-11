@@ -129,6 +129,17 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     return true;
 }
 
+#pragma mark - Random Data Generation
+NSData* randomDataOfLength(size_t length){
+    NSMutableData *data = [NSMutableData dataWithLength:length];
+    int result = SecRandomCopyBytes(kSecRandomDefault,
+                                    length,
+                                    data.mutableBytes);
+    
+    assert(result == 0);
+    return data;
+}
+
 #pragma mark - RSA Encryption
 - (NSData *) RSAEncryptData:(NSData *)content {
     
@@ -194,25 +205,14 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     return result;
 }
 
-#pragma mark - Random Data Generation
-- (NSData *)randomDataOfLength:(size_t)length {
-    NSMutableData *data = [NSMutableData dataWithLength:length];
-    int result = SecRandomCopyBytes(kSecRandomDefault,
-                                    length,
-                                    data.mutableBytes);
-    NSAssert(result == 0, @"Unable to generate random bytes: %d",
-             errno);
-    return data;
-}
-
 #pragma mark - AES Encryption
 - (NSData *)aesEncryptData:(NSData *)data key:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
     NSAssert(key, @"key must not be NULL");
     
     if (iv != NULL) {
-        *iv = [self randomDataOfLength:self.encryptorAlgorithmIVSize];
+        *iv = randomDataOfLength(self.encryptorAlgorithmIVSize);
     }
-    *key = [self randomDataOfLength:self.encryptorAlgorithmKeySize];
+    *key = randomDataOfLength(self.encryptorAlgorithmKeySize);
     
     size_t outLength;
     NSMutableData *cipherData = [NSMutableData dataWithLength:data.length + self.encryptorAlgorithmBlockSize];
