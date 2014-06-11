@@ -1,5 +1,5 @@
 //
-//  ObjectiveTLS.m
+//  DBTransitEncryption.m
 //  DBTransitEncryption
 //
 //  Created by David Benko on 5/9/14.
@@ -10,9 +10,9 @@
 // https://github.com/xjunior/XRSA          RSA Encryption Algorithms
 //
 
-#import "ObjectiveTLS.h"
+#import "DBTransitEncryption.h"
 
-@interface ObjectiveTLS (){
+@interface DBTransitEncryption (){
     SecKeyRef publicKey;
     SecKeyRef privateKey;
     SecCertificateRef certificate;
@@ -22,13 +22,13 @@
 }
 @end
 
-@implementation ObjectiveTLS
+@implementation DBTransitEncryption
 
-static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls";
+static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.dbtransitencryption";
 
 #pragma mark - Init
 
-- (ObjectiveTLS *)initWithX509PublicKeyData:(NSData *)base64KeyData {
+- (DBTransitEncryption *)initWithX509PublicKeyData:(NSData *)base64KeyData {
     self = [super init];
     if (self) {
         
@@ -53,7 +53,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     return self;
 }
 
-- (ObjectiveTLS *)initWithX509PublicKey:(NSString *)publicKeyPath {
+- (DBTransitEncryption *)initWithX509PublicKey:(NSString *)publicKeyPath {
     if (publicKeyPath == nil) {
         NSLog(@"Can not find %@", publicKeyPath);
         return nil;
