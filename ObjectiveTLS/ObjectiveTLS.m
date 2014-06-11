@@ -291,7 +291,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
 }
 
 #pragma mark - Public TLS Methods
-- (NSData *)aesEncryptData:(NSData *)data rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
+- (NSData *)encryptData:(NSData *)data rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
     NSData *secret = nil;
     NSData *encryptedData = [self aesEncryptData:data key:&secret iv:iv error:error];
     *key = [self RSAEncryptData:secret];
@@ -299,12 +299,26 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     return encryptedData;
 }
 
-- (NSData *)aesEncryptString:(NSString *)string rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
-    NSData *dataToEncrypt = [string dataUsingEncoding:self.encryptorStringEncoding];
-    return [self aesEncryptData:dataToEncrypt rsaEncryptedKey:key iv:iv error:error];
+- (NSData *)encryptData:(NSData *)data withIVMixer:(IVMixerBlock)ivMixer rsaEncryptedKey:(NSData **)key error:(NSError **)error{
+    NSData *iv = nil;
+    IVMixerBlock temp = self.ivMixer;
+    self.ivMixer = ivMixer;
+    NSData *encryptedData = [self encryptData:data rsaEncryptedKey:key iv:&iv error:error];
+    self.ivMixer = temp;
+    return encryptedData;
 }
 
-- (NSData *)aesDecryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
+- (NSData *)encryptString:(NSString *)string rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
+    NSData *dataToEncrypt = [string dataUsingEncoding:self.encryptorStringEncoding];
+    return [self encryptData:dataToEncrypt rsaEncryptedKey:key iv:iv error:error];
+}
+
+- (NSData *)encryptString:(NSString *)string withIVMixer:(IVMixerBlock)ivMixer rsaEncryptedKey:(NSData **)key error:(NSError **)error {
+    NSData *dataToEncrypt = [string dataUsingEncoding:self.encryptorStringEncoding];
+    return [self encryptData:dataToEncrypt withIVMixer:ivMixer rsaEncryptedKey:key error:error];
+}
+
+- (NSData *)decryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
     NSData *secret = [self RSADecryptData:key];
     if (secret) {
         NSData *decryptedData = [self aesDecryptData:data key:secret iv:iv error:error];
@@ -314,9 +328,23 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.objectivetls
     return nil;
 }
 
-- (NSString *)aesStringDecryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
-	NSData *decryptedData = [self aesDecryptData:data rsaEncryptedKey:key iv:iv error:error];
+- (NSData *)decryptData:(NSData *)data withIVSeparator:(IVSeparatorBlock)ivSeparator rsaEncryptedKey:(NSData *)key error:(NSError **)error{
+    NSData *iv = nil;
+    IVSeparatorBlock temp = self.ivSeparator;
+    self.ivSeparator = ivSeparator;
+    NSData *decryptedData = [self decryptData:data rsaEncryptedKey:key iv:iv error:error];
+    self.ivSeparator = temp;
+    return decryptedData;
+}
+
+- (NSString *)decryptString:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
+	NSData *decryptedData = [self decryptData:data rsaEncryptedKey:key iv:iv error:error];
 	return [[NSString alloc]initWithData:decryptedData encoding:self.encryptorStringEncoding];
+}
+
+- (NSString *)decryptString:(NSData *)data withIVSeparator:(IVSeparatorBlock)ivSeparator rsaEncryptedKey:(NSData *)key error:(NSError **)error{
+    NSData *decryptedData = [self decryptData:data withIVSeparator:ivSeparator rsaEncryptedKey:key error:error];
+    return [[NSString alloc]initWithData:decryptedData encoding:self.encryptorStringEncoding];
 }
 
 #pragma mark - Memory Management
