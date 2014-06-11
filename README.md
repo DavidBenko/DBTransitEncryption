@@ -1,4 +1,4 @@
-ObjectiveTLS
+DBTransitEncryption
 =====================
 
 Overview
@@ -9,7 +9,7 @@ Transport Layer Security for securing data payloads in Objective-C. An easy way 
 **TL;DR** AES encrypts data with a random key, RSA encrypts key and provides both.
 
 ### What does it do?
-**ObjectiveTLS** will secure data for transit similar to the handshake protocol of TLS. 
+**DBTransitEncryption** will secure data for transit similar to the handshake protocol of TLS. 
 - Generate AES symmetric key
 - Encrypt data payload with AES key
 - Encrypt AES key with X.509 RSA public key
@@ -18,13 +18,13 @@ Transport Layer Security for securing data payloads in Objective-C. An easy way 
 ### Installation
 
 ##### Via CocoaPods
-- Add `pod 'ObjectiveTLS'` to your podfile
+- Add `pod 'DBTransitEncryption'` to your podfile
 - Run `pod install`
  
 ##### Manual Installation
 - Link project against `Security.framework`
-- Add `ObjectiveTLS` folder to your project
-- Import header (`#import "ObjectiveTLS.h"`)
+- Add `DBTransitEncryption` folder to your project
+- Import header (`#import "DBTransitEncryption.h"`)
 
 ### Generate X.509 RSA Key Pair
 - Run the following commands to generate a personal key pair for testing. 
@@ -47,7 +47,7 @@ Encryption
     NSString *keyPath = [[NSBundle mainBundle] pathForResource:@"public_key"
                                                         ofType:@"der"];
     
-    ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKey:keyPath];
+    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:keyPath];
 ```
 
 ### Using in-memory X.509 Public Key (Recommended)
@@ -56,18 +56,18 @@ Encryption
 	NSString *publicKey = @"MIICs ... kT0=\n"; // Base64 encoded key
     NSData *data = [[NSData alloc] initWithBase64EncodedString:publicKey options:NSDataBase64DecodingIgnoreUnknownCharacters];
     
-    ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKeyData:data];
+    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKeyData:data];
 ```
 
 ### Encrypt NSString
 ```objc
     
-	ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKey:keyPath];
+	DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:keyPath];
     NSError *err = nil;
     NSData *key = nil;  // AES Key, Encrypted with RSA public key
     NSData *iv = nil;   // Randomly Generated IV
     
-    NSData *encryptedPayload = [otls aesEncryptString:@"Hello World Text"
+    NSData *encryptedPayload = [encryptor encryptString:@"Hello World Text"
                                       rsaEncryptedKey:&key
                                                    iv:&iv
                                                 error:&err];
@@ -79,12 +79,12 @@ Encryption
 	NSString *string = @"Hello World Text";
     NSData *dataToEncrypt = [string dataUsingEncoding:kStringEncoding];
 	
-    ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKey:keyPath];
+    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:keyPath];
     NSError *err = nil;
     NSData *key = nil;  // AES Key, Encrypted with RSA public key
     NSData *iv = nil;   // Randomly Generated IV
     
-    NSData *encryptedPayload = [otls aesEncryptData:dataToEncrypt
+    NSData *encryptedPayload = [encryptor encryptData:dataToEncrypt
                                       rsaEncryptedKey:&key
                                                    iv:&iv
                                                 error:&err];
@@ -100,8 +100,8 @@ Decryption
 	NSString *privateKeyPath = [[NSBundle mainBundle] pathForResource:@"private_key" ofType:@"p12"];
     NSString *privateKeyPassword = @"Password for .p12 file"
 	
-    ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKey:publicKeyPath];
-	[otls setPrivateKey:privateKeyPath withPassphrase:privateKeyPassword];
+    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:publicKeyPath];
+	[encryptor setPrivateKey:privateKeyPath withPassphrase:privateKeyPassword];
 ```
 
 ### Decrypt NSData
@@ -111,11 +111,11 @@ Decryption
 	NSData *rsaEncryptedKey; // some encrypted key
 	NSData *iv = nil; // some iv
 	
-    ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKey:publicKeyPath];
-	[otls setPrivateKey:privateKeyPath withPassphrase:@".p12 password"];
+    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:publicKeyPath];
+	[encryptor setPrivateKey:privateKeyPath withPassphrase:@".p12 password"];
     NSError *err = nil;
 	    
-    NSData *decryptedPayload = [otls aesDecryptData:dataToEncrypt
+    NSData *decryptedPayload = [encryptor decryptData:dataToEncrypt
                                       rsaEncryptedKey:key
                                                    iv:iv
                                                 error:&err];
@@ -123,7 +123,7 @@ Decryption
 
 Public Properties
 ---------
-**ObjectiveTLS** has a few public properties which allow you to modify the encryption algorithms to suit your project's needs.
+**DBTransitEncryption** has a few public properties which allow you to modify the encryption algorithms to suit your project's needs.
 
 ```objc
 @property (nonatomic, assign) NSUInteger rsaKeySize;                        // RSA key size in bits
@@ -141,7 +141,7 @@ Public Properties
 
 IV Mixer Blocks
 ---------
-**ObjectiveTLS** allows you to define custom blocks to mix and separate the initialization vector with the key and/or the encrypted data. 
+**DBTransitEncryption** allows you to define custom blocks to mix and separate the initialization vector with the key and/or the encrypted data. 
 
 The `ivMixer` gives access to the data, key, and iv immediately after the data is encrypted, but before the key is encrypted. This allows you to mix the iv with key before it is RSA encrypted, to further secure the iv.
 
@@ -150,11 +150,11 @@ The `ivSeparator` is the opposite of the `ivMixer`. The `ivSeparator` should be 
 ### IV Mixing Example
 ```objc
 
-    ObjectiveTLS *otls = [[ObjectiveTLS alloc]initWithX509PublicKeyData:pubkeyb64data];
+    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKeyData:pubkeyb64data];
     
     // Prepends the iv to the key before the key is encrypted
     
-    [otls setIvMixer:^(NSData **data,NSData **key, NSData *iv){
+    [encryptor setIvMixer:^(NSData **data,NSData **key, NSData *iv){
         NSMutableData *mutableKey = [iv mutableCopy];
         [mutableKey appendBytes:[*key bytes] length:[*key length]];
         *key = mutableKey;
@@ -162,7 +162,7 @@ The `ivSeparator` is the opposite of the `ivMixer`. The `ivSeparator` should be 
     
     // Extracts the iv from the key before decryption
     
-    [otls setIvSeparator:^NSData *(NSData **data, NSData **key){
+    [encryptor setIvSeparator:^NSData *(NSData **data, NSData **key){
         NSInteger ivSize = 16;
         NSMutableData *mutableKey = [*key mutableCopy];
         NSRange range = NSMakeRange(0, ivSize);
