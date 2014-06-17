@@ -9,6 +9,8 @@
 #import "DBTransitEncryptor.h"
 
 @interface DBTransitEncryptor (NSString)
+
+#pragma mark - Encryption
 /**
  * Generates symmetric key and iv, symmetrically encrypts string, RSA encrypts symmetric key
  *
@@ -34,6 +36,7 @@
  */
 - (NSData *)encryptString:(NSString *)string withIVMixer:(IVMixerBlock)ivMixer rsaEncryptedKey:(NSData **)key error:(NSError **)error;
 
+#pragma mark - Decryption
 /**
  * Decrypts string from encrypted data. The private key must be set for this method to function.
  * @see setPrivateKey:withPassphrase:
