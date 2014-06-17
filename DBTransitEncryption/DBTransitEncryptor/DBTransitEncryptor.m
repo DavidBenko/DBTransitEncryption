@@ -330,7 +330,7 @@ NSData* randomDataOfLength(size_t length){
 
 #pragma mark - Memory Management
 - (void)dealloc {
-    CFRelease(privateKey),privateKey = nil;
+    if(privateKey){CFRelease(privateKey),privateKey = nil;}
     CFRelease(publicKey),publicKey = nil;
     CFRelease(certificate),certificate=nil;
     CFRelease(trust),trust=nil;
