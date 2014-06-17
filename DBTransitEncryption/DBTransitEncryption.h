@@ -13,5 +13,6 @@
 
 #import "DBTransitEncryptor.h"
 #import "DBTransitEncryptor+NSString.h"
+#import "DBTransitEncryptor+Base64.h"
 
 #endif /* _DBTRANSITENCRYPTION_ */
