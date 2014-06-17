@@ -1,6 +1,6 @@
 //
-//  DBTransitEncryption.m
-//  DBTransitEncryption
+//  DBTransitEncryptor.m
+//  DBTransitEncryptor
 //
 //  Created by David Benko on 5/9/14.
 //  Copyright (c) 2014 David Benko. All rights reserved.
@@ -10,9 +10,9 @@
 // https://github.com/xjunior/XRSA          RSA Encryption Algorithms
 //
 
-#import "DBTransitEncryption.h"
+#import "DBTransitEncryptor.h"
 
-@interface DBTransitEncryption (){
+@interface DBTransitEncryptor (){
     SecKeyRef publicKey;
     SecKeyRef privateKey;
     SecCertificateRef certificate;
@@ -22,13 +22,13 @@
 }
 @end
 
-@implementation DBTransitEncryption
+@implementation DBTransitEncryptor
 
 static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.dbtransitencryption";
 
 #pragma mark - Init
 
-- (DBTransitEncryption *)initWithX509PublicKeyData:(NSData *)base64KeyData {
+- (DBTransitEncryptor *)initWithX509PublicKeyData:(NSData *)base64KeyData {
     self = [super init];
     if (self) {
         
@@ -53,7 +53,7 @@ static NSString * const kObjectiveTLSErrorDomain = @"com.davidbenko.dbtransitenc
     return self;
 }
 
-- (DBTransitEncryption *)initWithX509PublicKey:(NSString *)publicKeyPath {
+- (DBTransitEncryptor *)initWithX509PublicKey:(NSString *)publicKeyPath {
     if (publicKeyPath == nil) {
         NSLog(@"Can not find %@", publicKeyPath);
         return nil;
@@ -308,16 +308,6 @@ NSData* randomDataOfLength(size_t length){
     return encryptedData;
 }
 
-- (NSData *)encryptString:(NSString *)string rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error{
-    NSData *dataToEncrypt = [string dataUsingEncoding:self.encryptorStringEncoding];
-    return [self encryptData:dataToEncrypt rsaEncryptedKey:key iv:iv error:error];
-}
-
-- (NSData *)encryptString:(NSString *)string withIVMixer:(IVMixerBlock)ivMixer rsaEncryptedKey:(NSData **)key error:(NSError **)error {
-    NSData *dataToEncrypt = [string dataUsingEncoding:self.encryptorStringEncoding];
-    return [self encryptData:dataToEncrypt withIVMixer:ivMixer rsaEncryptedKey:key error:error];
-}
-
 #pragma mark - Public Decryption Methods
 - (NSData *)decryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
     NSData *secret = [self RSADecryptData:key];
@@ -336,16 +326,6 @@ NSData* randomDataOfLength(size_t length){
     NSData *decryptedData = [self decryptData:data rsaEncryptedKey:key iv:iv error:error];
     self.ivSeparator = temp;
     return decryptedData;
-}
-
-- (NSString *)decryptString:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error{
-	NSData *decryptedData = [self decryptData:data rsaEncryptedKey:key iv:iv error:error];
-	return [[NSString alloc]initWithData:decryptedData encoding:self.encryptorStringEncoding];
-}
-
-- (NSString *)decryptString:(NSData *)data withIVSeparator:(IVSeparatorBlock)ivSeparator rsaEncryptedKey:(NSData *)key error:(NSError **)error{
-    NSData *decryptedData = [self decryptData:data withIVSeparator:ivSeparator rsaEncryptedKey:key error:error];
-    return [[NSString alloc]initWithData:decryptedData encoding:self.encryptorStringEncoding];
 }
 
 #pragma mark - Memory Management
