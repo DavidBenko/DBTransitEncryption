@@ -20,6 +20,7 @@ Transport Layer Security for securing data payloads in Objective-C. An easy way 
 ##### Via CocoaPods
 - Add `pod 'DBTransitEncryption'` to your podfile
 - Run `pod install`
+- Import header (`#import <DBTransitEncryption/DBTransitEncryption.h>`)
  
 ##### Manual Installation
 - Link project against `Security.framework`
@@ -47,7 +48,7 @@ Encryption
     NSString *keyPath = [[NSBundle mainBundle] pathForResource:@"public_key"
                                                         ofType:@"der"];
     
-    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:keyPath];
+    DBTransitEncryptor *encryptor = [[DBTransitEncryptor alloc]initWithX509PublicKey:keyPath];
 ```
 
 ### Using in-memory X.509 Public Key (Recommended)
@@ -56,13 +57,13 @@ Encryption
 	NSString *publicKey = @"MIICs ... kT0=\n"; // Base64 encoded key
     NSData *data = [[NSData alloc] initWithBase64EncodedString:publicKey options:NSDataBase64DecodingIgnoreUnknownCharacters];
     
-    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKeyData:data];
+    DBTransitEncryptor *encryptor = [[DBTransitEncryptor alloc]initWithX509PublicKeyData:data];
 ```
 
 ### Encrypt NSString
 ```objc
     
-	DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:keyPath];
+	DBTransitEncryptor *encryptor = [[DBTransitEncryptor alloc]initWithX509PublicKey:keyPath];
     NSError *err = nil;
     NSData *key = nil;  // AES Key, Encrypted with RSA public key
     NSData *iv = nil;   // Randomly Generated IV
@@ -79,7 +80,7 @@ Encryption
 	NSString *string = @"Hello World Text";
     NSData *dataToEncrypt = [string dataUsingEncoding:kStringEncoding];
 	
-    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:keyPath];
+    DBTransitEncryptor *encryptor = [[DBTransitEncryptor alloc]initWithX509PublicKey:keyPath];
     NSError *err = nil;
     NSData *key = nil;  // AES Key, Encrypted with RSA public key
     NSData *iv = nil;   // Randomly Generated IV
@@ -100,7 +101,7 @@ Decryption
 	NSString *privateKeyPath = [[NSBundle mainBundle] pathForResource:@"private_key" ofType:@"p12"];
     NSString *privateKeyPassword = @"Password for .p12 file"
 	
-    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:publicKeyPath];
+    DBTransitEncryptor *encryptor = [[DBTransitEncryptor alloc]initWithX509PublicKey:publicKeyPath];
 	[encryptor setPrivateKey:privateKeyPath withPassphrase:privateKeyPassword];
 ```
 
@@ -111,7 +112,7 @@ Decryption
 	NSData *rsaEncryptedKey; // some encrypted key
 	NSData *iv = nil; // some iv
 	
-    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKey:publicKeyPath];
+    DBTransitEncryptor *encryptor = [[DBTransitEncryptor alloc]initWithX509PublicKey:publicKeyPath];
 	[encryptor setPrivateKey:privateKeyPath withPassphrase:@".p12 password"];
     NSError *err = nil;
 	    
@@ -123,7 +124,7 @@ Decryption
 
 Public Properties
 ---------
-**DBTransitEncryption** has a few public properties which allow you to modify the encryption algorithms to suit your project's needs.
+**DBTransitEncryptor** has a few public properties which allow you to modify the encryption algorithms to suit your project's needs.
 
 ```objc
 @property (nonatomic, assign) NSUInteger rsaKeySize;                        // RSA key size in bits
@@ -150,7 +151,7 @@ The `ivSeparator` is the opposite of the `ivMixer`. The `ivSeparator` should be 
 ### IV Mixing Example
 ```objc
 
-    DBTransitEncryption *encryptor = [[DBTransitEncryption alloc]initWithX509PublicKeyData:pubkeyb64data];
+    DBTransitEncryptor *encryptor = [[DBTransitEncryptor alloc]initWithX509PublicKeyData:pubkeyb64data];
     
     // Prepends the iv to the key before the key is encrypted
     
