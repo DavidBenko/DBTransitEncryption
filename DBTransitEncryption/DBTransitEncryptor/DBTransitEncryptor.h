@@ -1,6 +1,6 @@
 //
-//  DBTransitEncryption.h
-//  DBTransitEncryption
+//  DBTransitEncryptor.h
+//  DBTransitEncryptor
 //
 //  Created by David Benko on 5/9/14.
 //  Copyright (c) 2014 David Benko. All rights reserved.
@@ -16,7 +16,7 @@
 typedef void (^IVMixerBlock) (NSData **data,NSData **key, NSData *iv);
 typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
 
-@interface DBTransitEncryption : NSObject
+@interface DBTransitEncryptor : NSObject
 
 @property (nonatomic, assign) NSUInteger rsaKeySize;                        // RSA key size in bits
 @property (nonatomic, assign) SecPadding rsaPadding;                        // RSA padding
@@ -37,7 +37,7 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
  * @param base64KeyData The contents of the public key
  * @return new ObjectiveTLS instance
  */
-- (DBTransitEncryption *)initWithX509PublicKeyData:(NSData *)base64KeyData;
+- (DBTransitEncryptor *)initWithX509PublicKeyData:(NSData *)base64KeyData;
 
 /**
  * Initializes a new ObjectiveTLS object with the contents of a X.509 RSA public key at a given path
@@ -45,7 +45,7 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
  * @param publicKeyPath The file path of the public key
  * @return new ObjectiveTLS instance
  */
-- (DBTransitEncryption *)initWithX509PublicKey:(NSString *)publicKeyPath;
+- (DBTransitEncryptor *)initWithX509PublicKey:(NSString *)publicKeyPath;
 
 #pragma mark - PKCS#12 RSA Private Key (.p12)
 
@@ -73,17 +73,6 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
 - (NSData *)encryptData:(NSData *)data rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error;
 
 /**
- * Generates symmetric key and iv, symmetrically encrypts string, RSA encrypts symmetric key
- *
- * @param string The string to be encrypted
- * @param key The RSA-encrypted, randomly generated, symmetric key
- * @param iv The randomly generated IV
- * @param error Errors will be filled here
- * @return the encrypted data
- */
-- (NSData *)encryptString:(NSString *)string rsaEncryptedKey:(NSData **)key iv:(NSData **)iv error:(NSError **)error;
-
-/**
  * Generates symmetric key and iv, symmetrically encrypts data, RSA encrypts symmetric key
  * The IVMixerBlock is fired after the symmetric data encryption and before the symmetric key is encrypted.
  * Use the IVMixerBlock to mix the IV with either the data or key. 
@@ -96,20 +85,6 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
  * @return the encrypted data
  */
 - (NSData *)encryptData:(NSData *)data withIVMixer:(IVMixerBlock)ivMixer rsaEncryptedKey:(NSData **)key error:(NSError **)error;
-
-/**
- * Generates symmetric key and iv, symmetrically encrypts string, RSA encrypts symmetric key
- * The IVMixerBlock is fired after the symmetric data encryption and before the symmetric key is encrypted.
- * Use the IVMixerBlock to mix the IV with either the data or key.
- * If passed here, the IVMixerBlock will override the ivMixer property, but only for this call
- *
- * @param string The string to be encrypted
- * @param ivMixer Block to mix the IV with key or data
- * @param key The RSA-encrypted, randomly generated, symmetric key
- * @param error Errors will be filled here
- * @return the encrypted data
- */
-- (NSData *)encryptString:(NSString *)string withIVMixer:(IVMixerBlock)ivMixer rsaEncryptedKey:(NSData **)key error:(NSError **)error;
 
 #pragma mark - Public Decryption Methods
 
@@ -125,17 +100,6 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
  */
 - (NSData *)decryptData:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error;
 
-/**
- * Decrypts string from encrypted data. The private key must be set for this method to function.
- * @see setPrivateKey:withPassphrase:
- *
- * @param data The data to be decrypted
- * @param key The RSA-encrypted symmetric key
- * @param iv The IV
- * @param error Errors will be filled here
- * @return the decrypted string
- */
-- (NSString *)decryptString:(NSData *)data rsaEncryptedKey:(NSData *)key iv:(NSData *)iv error:(NSError **)error;
 
 /**
  * Decrypts data. The private key must be set for this method to function.
@@ -149,18 +113,5 @@ typedef NSData* (^IVSeparatorBlock) (NSData **data, NSData **key);
  * @return the decrypted data
  */
 - (NSData *)decryptData:(NSData *)data withIVSeparator:(IVSeparatorBlock)ivSeparator rsaEncryptedKey:(NSData *)key error:(NSError **)error;
-
-/**
- * Decrypts string from encrypted data. The private key must be set for this method to function.
- * @see setPrivateKey:withPassphrase:
- * The IVSeparatorBlock should undo the IVMixerBlock run during encryption
- *
- * @param data The data to be decrypted
- * @param ivSeparator The IVSeparatorBlock to retrieve the IV from the key or data
- * @param key The RSA-encrypted symmetric key
- * @param error Errors will be filled here
- * @return the decrypted string
- */
-- (NSString *)decryptString:(NSData *)data withIVSeparator:(IVSeparatorBlock)ivSeparator rsaEncryptedKey:(NSData *)key error:(NSError **)error;
 
 @end

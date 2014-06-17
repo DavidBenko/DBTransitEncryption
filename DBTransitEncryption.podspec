@@ -14,5 +14,5 @@ Transport Layer Security for securing data payloads in Objective-C. An easy way 
   s.platform     = :ios
   s.requires_arc = true
 
-  s.source_files = 'DBTransitEncryption'
+  s.source_files = 'DBTransitEncryption/**/*.{h,m}'
 end
